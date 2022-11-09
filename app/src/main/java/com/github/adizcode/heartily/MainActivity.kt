@@ -3,11 +3,13 @@ package com.github.adizcode.heartily
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,12 +17,18 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.github.adizcode.heartily.ui.theme.HeartilyTheme
@@ -104,14 +112,14 @@ fun HeartilyApp(onPredictionStageChange: (String) -> Unit) {
 fun HomePage(paddingValues: PaddingValues, onPageUpdate: (String) -> Unit) {
     val (age, setAge) = rememberSaveable { mutableStateOf("") }
     val (dailyCigarettes, setDailyCigarettes) = rememberSaveable { mutableStateOf("") }
-    val (bpMeds, setBpMeds) = rememberSaveable { mutableStateOf("") }
-    val (prevalentStroke, setPrevalentStroke) = rememberSaveable { mutableStateOf("") }
+    val (bpMeds, setBpMeds) = rememberSaveable { mutableStateOf(false) }
+    val (prevalentStroke, setPrevalentStroke) = rememberSaveable { mutableStateOf(false) }
     val (prevalentHypertension, setPrevalentHypertension) = rememberSaveable {
         mutableStateOf(
-            ""
+            false
         )
     }
-    val (diabetic, setDiabetic) = rememberSaveable { mutableStateOf("") }
+    val (diabetic, setDiabetic) = rememberSaveable { mutableStateOf(false) }
     val (cholesterol, setCholesterol) = rememberSaveable { mutableStateOf("") }
     val (bmi, setBmi) = rememberSaveable { mutableStateOf("") }
     val (heartRate, setHeartRate) = rememberSaveable { mutableStateOf("") }
@@ -123,18 +131,12 @@ fun HomePage(paddingValues: PaddingValues, onPageUpdate: (String) -> Unit) {
         val cholesterolNum = cholesterol.toInt()
         val dailyCigarettesNum = dailyCigarettes.toInt()
 
-        // TODO: Make toggle buttons
-        val isOnBpMeds = bpMeds.isNotBlank()
-        val hasPrevalentStroke = prevalentStroke.isNotBlank()
-        val hasPrevalentHypertension = prevalentHypertension.isNotBlank()
-        val isDiabetic = diabetic.isNotBlank()
-
 
         val bmiNum = bmi.toFloat()
         val heartRateNum = heartRate.toInt()
 
         val isHeartDiseaseLikely =
-            ageNum >= 65 || cholesterolNum >= 240 || dailyCigarettesNum >= 1 || isOnBpMeds || hasPrevalentStroke || hasPrevalentHypertension || isDiabetic || bmiNum >= 35 || heartRateNum < 60 || heartRateNum > 100
+            ageNum >= 65 || cholesterolNum >= 240 || dailyCigarettesNum >= 1 || bpMeds || prevalentStroke || prevalentHypertension || diabetic || bmiNum >= 35 || heartRateNum < 60 || heartRateNum > 100
 
         val newPage = if (isHeartDiseaseLikely) "PredictionTrue" else "PredictionFalse"
         onPageUpdate(newPage)
@@ -148,49 +150,92 @@ fun HomePage(paddingValues: PaddingValues, onPageUpdate: (String) -> Unit) {
         verticalArrangement = spacedBy(10.dp)
     ) {
         Text(
-            "Your Bio Details", style = MaterialTheme.typography.headlineMedium
+            "Heart Health Calculator", style = MaterialTheme.typography.headlineMedium
         )
-        OutlinedTextField(
-            value = age,
-            onValueChange = setAge,
-            placeholder = { Text("Age") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        Spacer(modifier = Modifier.height(5.dp))
+        Row(horizontalArrangement = SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "I am ")
+            OutlinedTextField(
+                value = age,
+                onValueChange = setAge,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(48.dp),
+            )
+            Text(" years old.")
+        }
+        Row(horizontalArrangement = SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "I smoke ")
+            OutlinedTextField(
+                value = dailyCigarettes,
+                onValueChange = setDailyCigarettes,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(48.dp)
+            )
+            Text(" cigarettes per day.")
+        }
+        Row(horizontalArrangement = SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "My total cholesterol is ")
+            OutlinedTextField(
+                value = cholesterol,
+                onValueChange = setCholesterol,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(48.dp)
+            )
+            Text(" mg / dL.")
+        }
+        Row(horizontalArrangement = SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "My Body Mass Index is ")
+            OutlinedTextField(
+                value = bmi,
+                onValueChange = setBmi,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(48.dp)
+            )
+            Text(" .")
+        }
+        Row(horizontalArrangement = SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "My heart rate is ")
+            OutlinedTextField(
+                value = heartRate,
+                onValueChange = setHeartRate,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(48.dp)
+            )
+            Text(" beats per minute.")
+        }
+
+        LabelledCheckBox(
+            checked = bpMeds,
+            onCheckedChange = setBpMeds,
+            label = "I'm currently on blood pressure meds."
         )
-        OutlinedTextField(
-            value = dailyCigarettes,
-            onValueChange = setDailyCigarettes,
-            placeholder = { Text("Cigarettes Per Day") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+
+        LabelledCheckBox(
+            checked = prevalentStroke,
+            onCheckedChange = setPrevalentStroke,
+            label = "I've had a prevalent stroke."
         )
-        OutlinedTextField(value = bpMeds,
-            onValueChange = setBpMeds,
-            placeholder = { Text("Currently on any Blood Pressure Meds") })
-        OutlinedTextField(value = prevalentStroke,
-            onValueChange = setPrevalentStroke,
-            placeholder = { Text("Prevalent Stroke") })
-        OutlinedTextField(value = prevalentHypertension,
-            onValueChange = setPrevalentHypertension,
-            placeholder = { Text("Prevalent Hypertension") })
-        OutlinedTextField(value = diabetic,
-            onValueChange = setDiabetic,
-            placeholder = { Text("Diabetic or not") })
-        OutlinedTextField(
-            value = cholesterol,
-            onValueChange = setCholesterol,
-            placeholder = { Text("Total Cholesterol") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+
+        LabelledCheckBox(
+            checked = prevalentHypertension,
+            onCheckedChange = setPrevalentHypertension,
+            label = "I've had prevalent hypertension."
         )
-        OutlinedTextField(
-            value = bmi,
-            onValueChange = setBmi,
-            placeholder = { Text("Body Mass Index") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-        )
-        OutlinedTextField(
-            value = heartRate,
-            onValueChange = setHeartRate,
-            placeholder = { Text("Heart Rate") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+
+        LabelledCheckBox(
+            checked = diabetic,
+            onCheckedChange = setDiabetic,
+            label = "I am diabetic."
         )
 
         Button(onClick = { onCalculate() }) {
@@ -212,6 +257,40 @@ fun PredictionTrue() {
 @Composable
 fun PredictionFalse() {
     Text(text = "False")
+}
+
+
+@Composable
+fun LabelledCheckBox(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit),
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(
+                indication = rememberRipple(color = MaterialTheme.colorScheme.primary),
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = { onCheckedChange(!checked) }
+            )
+            .requiredHeight(ButtonDefaults.MinHeight)
+            .padding(horizontal = 4.dp, vertical = 10.dp)
+    ) {
+
+        Text(
+            text = label,
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Checkbox(
+            checked = checked,
+            onCheckedChange = null
+        )
+    }
 }
 
 @Composable
