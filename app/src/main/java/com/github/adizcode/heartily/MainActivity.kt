@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,17 +19,21 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.github.adizcode.heartily.ui.theme.HeartilyTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,10 +50,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     "PredictionTrue" -> {
-                        PredictionTrue()
+                        PredictionTrue { predictionStage.value = "Main" }
                     }
                     "PredictionFalse" -> {
-                        PredictionFalse()
+                        PredictionFalse { predictionStage.value = "Main" }
                     }
                 }
             }
@@ -250,13 +253,57 @@ fun InfoPage(paddingValues: PaddingValues) {
 }
 
 @Composable
-fun PredictionTrue() {
-    Text(text = "True")
+fun PredictionFalse(goBack: () -> Unit) {
+    Column(Modifier.padding(48.dp), horizontalAlignment = CenterHorizontally) {
+        val composition by rememberLottieComposition(spec = LottieCompositionSpec.Url("https://assets3.lottiefiles.com/packages/lf20_5njp3vgg.json"))
+        LottieAnimation(
+            modifier = Modifier
+                .weight(8f),
+            composition = composition,
+            iterations = LottieConstants.IterateForever
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .align(CenterHorizontally),
+            text = "Your heart looks healthy!",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Button(onClick = goBack) {
+            Text("Go Back")
+        }
+    }
 }
 
 @Composable
-fun PredictionFalse() {
-    Text(text = "False")
+fun PredictionTrue(goBack: () -> Unit) {
+    Column(Modifier.padding(48.dp), horizontalAlignment = CenterHorizontally) {
+        val composition by rememberLottieComposition(spec = LottieCompositionSpec.Url("https://assets7.lottiefiles.com/packages/lf20_hkqm9iip.json"))
+        LottieAnimation(
+            modifier = Modifier
+                .weight(8f),
+            composition = composition,
+            iterations = LottieConstants.IterateForever
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .align(CenterHorizontally),
+            text = "We think you have a heart disease.",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Button(onClick = goBack) {
+            Text("Go Back")
+        }
+    }
 }
 
 
